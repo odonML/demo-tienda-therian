@@ -1,0 +1,40 @@
+name: detector therian
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      user_name: # Este es el ID que usarás luego
+        description: "nombre de usuario" # Lo que ve el usuario
+        required: true # ¿Es obligatorio? (true/false)
+        default: "odonml" # Texto predefinido
+        type: string # Tipo de dato (string, boolean, choice, environment)# Permite ejecutarlo manualmente desde la pestaña Actions
+
+jobs:
+  create_issue:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # Importante: permite a la Action escribir en tu repo
+
+    steps:
+      - name: Verificar el usuario
+        run: |
+          echo "Usuario ingresado: ${{ github.event.inputs.user_name }}"
+
+      - name: Crear el issue con diacnostico therian
+        env:
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          TITULO: "diagnostico"
+        run: |
+          CUERPO="Hola @${{ github.event.inputs.user_name }} :smiley:, te informamos que no eres un therian :dog: :cat:, o si? :thinking:"
+          curl -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/$REPO/issues \
+            --data "$(jq -n \
+              --arg title "$TITULO" \
+              --arg body "$CUERPO" \
+              '{title: $title, body: $body}')"
